@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PlentyOfSharing</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --border: #e4e7ef;
+    --text: #1c2033;
+    --dim: #6b7290;
+    --accent: #4f6df5;
+    --accent-dim: #eef1fe;
+    --green: #17a673;
+    --green-dim: #e7f8f1;
+    --red: #e5484d;
+    --red-dim: #fdecec;
+    --radius: 14px;
+    --shadow: 0 1px 3px rgba(20, 24, 48, 0.06), 0 8px 24px rgba(20, 24, 48, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  body { padding: 28px 16px 80px; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 28px; }
+  header h1 {
+    font-size: 26px;
+    margin: 0 0 4px;
+    letter-spacing: -0.3px;
+  }
+  header p { color: var(--dim); margin: 0; font-size: 14px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--dim);
+    margin: 0 0 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card h2 .count { color: var(--text); font-weight: 600; text-transform: none; letter-spacing: 0; }
+
+  /* Participants */
+  #participantForm { display: flex; gap: 8px; margin-bottom: 14px; }
+  #participantForm input {
+    flex: 1;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 6px 8px 6px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .chip button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    padding: 2px 4px;
+    opacity: 0.6;
+    border-radius: 50%;
+  }
+  .chip button:hover { opacity: 1; background: rgba(79,109,245,0.15); }
+  .empty-hint { color: var(--dim); font-size: 14px; padding: 6px 0; }
+
+  /* Item form */
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    color: var(--dim);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text);
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .row2 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+
+  .split-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .split-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    background: #fff;
+    transition: all 0.12s;
+  }
+  .split-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .split-pill input { display: none; }
+  .split-row { display: flex; gap: 8px; margin-bottom: 8px; }
+
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 9px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary {
+    background: #fff;
+    color: var(--dim);
+    border: 1px solid var(--border);
+    padding: 9px 14px;
+    border-radius: 9px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.link {
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 6px;
+  }
+
+  /* Items list */
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-main { flex: 1; }
+  .item-desc { font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+  .item-meta { font-size: 13px; color: var(--dim); line-height: 1.5; }
+  .item-amount { font-weight: 700; font-size: 15px; white-space: nowrap; }
+
+  /* Summary */
+  .balance-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+  .balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #fafbfd;
+    font-size: 14px;
+  }
+  .balance-row .name { font-weight: 600; }
+  .balance-row .amt.positive { color: var(--green); font-weight: 700; }
+  .balance-row .amt.negative { color: var(--red); font-weight: 700; }
+  .balance-row .amt.zero { color: var(--dim); font-weight: 600; }
+
+  .settle-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .settle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--green-dim);
+    font-size: 14.5px;
+  }
+  .settle-row .arrow { color: var(--green); font-weight: 700; }
+  .settle-row b { font-weight: 700; }
+  .settle-row .settle-amt { margin-left: auto; font-weight: 700; color: var(--green); }
+
+  .all-settled {
+    text-align: center;
+    padding: 20px;
+    color: var(--dim);
+    font-size: 14px;
+  }
+
+  .transactions-note {
+    font-size: 12.5px;
+    color: var(--dim);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>PlentyOfSharing</h1>
+    <p>Split group costs fairly. Settle up with the fewest payments possible.</p>
+  </header>
+
+  <div class="card">
+    <h2>Participants <span class="count" id="participantCount">0</span></h2>
+    <form id="participantForm">
+      <input type="text" id="participantInput" placeholder="Add a person's name…" maxlength="30" />
+      <button type="submit" class="primary">Add</button>
+    </form>
+    <div class="chips" id="participantChips"></div>
+    <div class="empty-hint" id="participantEmptyHint">Add at least 2 people to start splitting costs.</div>
+  </div>
+
+  <div class="card">
+    <h2>Add an expense <span class="count" id="itemCount">0 / 20</span></h2>
+    <form id="itemForm">
+      <div class="row2">
+        <div class="field">
+          <label for="itemDesc">What was it?</label>
+          <input type="text" id="itemDesc" placeholder="e.g. Dinner at Marea" maxlength="60" />
+        </div>
+        <div class="field">
+          <label for="itemAmount">Amount ($)</label>
+          <input type="number" id="itemAmount" placeholder="0.00" min="0" step="0.01" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="itemPayer">Who paid?</label>
+        <select id="itemPayer"></select>
+      </div>
+      <div class="field">
+        <label>Split among</label>
+        <div class="split-row">
+          <button type="button" class="secondary" id="selectAllBtn">Select all</button>
+          <button type="button" class="secondary" id="selectNoneBtn">Clear</button>
+        </div>
+        <div class="split-options" id="splitOptions"></div>
+      </div>
+      <button type="submit" class="primary" id="addItemBtn">Add expense</button>
+    </form>
+  </div>
+
+  <div class="card" id="itemsCard" style="display:none;">
+    <h2>Expenses <span class="count" id="itemsListCount">0</span></h2>
+    <div id="itemsList"></div>
+  </div>
+
+  <div class="card" id="summaryCard" style="display:none;">
+    <h2>Balances</h2>
+    <div class="balance-list" id="balanceList"></div>
+
+    <h2 style="margin-top:20px;">Settle up</h2>
+    <div id="settleArea"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'plentyOfSharing_state_v1';
+  const MAX_ITEMS = 20;
+
+  let state = loadState() || { participants: [], items: [] };
+  let nextParticipantId = computeNextId(state.participants);
+  let nextItemId = computeNextId(state.items);
+  let selectedSplitIds = new Set();
+
+  function computeNextId(list) {
+    return list.reduce((max, x) => Math.max(max, x.id), 0) + 1;
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.participants) || !Array.isArray(parsed.items)) return null;
+      // migrate older saves that stored whole-cent amounts
+      parsed.items.forEach(it => {
+        if (it.amountMills === undefined && it.amountCents !== undefined) {
+          it.amountMills = it.amountCents * 10;
+          delete it.amountCents;
+        }
+      });
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      // storage unavailable (private browsing, sandboxed context, etc.) — continue without persistence
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // Money is tracked internally in mills (thousandths of a dollar, 3 decimal places)
+  // so per-person shares stay precise through splitting and settlement math.
+  // Rounding to cents (2 decimal places) happens only here, at display time.
+  function formatMoney(mills) {
+    const cents = Math.round(mills / 10);
+    const sign = cents < 0 ? '-' : '';
+    const abs = Math.abs(cents);
+    return sign + '$' + (abs / 100).toFixed(2);
+  }
+
+  // ---------- Participants ----------
+  const participantForm = document.getElementById('participantForm');
+  const participantInput = document.getElementById('participantInput');
+  const participantChips = document.getElementById('participantChips');
+  const participantCount = document.getElementById('participantCount');
+  const participantEmptyHint = document.getElementById('participantEmptyHint');
+
+  participantForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = participantInput.value.trim();
+    if (!name) return;
+    if (state.participants.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+      participantInput.value = '';
+      participantInput.focus();
+      return;
+    }
+    state.participants.push({ id: nextParticipantId++, name });
+    participantInput.value = '';
+    saveState();
+    renderAll();
+    participantInput.focus();
+  });
+
+  function removeParticipant(id) {
+    state.participants = state.participants.filter(p => p.id !== id);
+    // remove from any item's payer/split, and drop items with no payer left
+    state.items = state.items
+      .map(it => ({ ...it, participantIds: it.participantIds.filter(pid => pid !== id) }))
+      .filter(it => it.payerId !== id && it.participantIds.length > 0);
+    saveState();
+    renderAll();
+  }
+
+  function renderParticipants() {
+    participantCount.textContent = state.participants.length;
+    participantChips.innerHTML = state.participants.map(p => `
+      <span class="chip">${escapeHtml(p.name)}<button type="button" data-remove-participant="${p.id}" title="Remove">&times;</button></span>
+    `).join('');
+    participantEmptyHint.style.display = state.participants.length >= 2 ? 'none' : 'block';
+
+    participantChips.querySelectorAll('[data-remove-participant]').forEach(btn => {
+      btn.addEventListener('click', () => removeParticipant(Number(btn.dataset.removeParticipant)));
+    });
+  }
+
+  // ---------- Item form ----------
+  const itemForm = document.getElementById('itemForm');
+  const itemDesc = document.getElementById('itemDesc');
+  const itemAmount = document.getElementById('itemAmount');
+  const itemPayer = document.getElementById('itemPayer');
+  const splitOptions = document.getElementById('splitOptions');
+  const itemCount = document.getElementById('itemCount');
+  const addItemBtn = document.getElementById('addItemBtn');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  const selectNoneBtn = document.getElementById('selectNoneBtn');
+
+  selectAllBtn.addEventListener('click', () => {
+    selectedSplitIds = new Set(state.participants.map(p => p.id));
+    renderSplitOptions();
+  });
+  selectNoneBtn.addEventListener('click', () => {
+    selectedSplitIds.clear();
+    renderSplitOptions();
+  });
+
+  function renderItemFormControls() {
+    const atLimit = state.items.length >= MAX_ITEMS;
+    const hasEnoughPeople = state.participants.length >= 2;
+    const formDisabled = atLimit || !hasEnoughPeople;
+
+    itemCount.textContent = `${state.items.length} / ${MAX_ITEMS}`;
+
+    itemPayer.innerHTML = state.participants.map(p =>
+      `<option value="${p.id}">${escapeHtml(p.name)}</option>`
+    ).join('');
+
+    // keep only still-valid selections, default to all if nothing selected yet
+    const validIds = new Set(state.participants.map(p => p.id));
+    selectedSplitIds = new Set([...selectedSplitIds].filter(id => validIds.has(id)));
+    if (selectedSplitIds.size === 0 && state.participants.length > 0) {
+      selectedSplitIds = new Set(state.participants.map(p => p.id));
+    }
+
+    renderSplitOptions();
+
+    [itemDesc, itemAmount, itemPayer].forEach(el => el.disabled = formDisabled);
+    addItemBtn.disabled = formDisabled;
+    addItemBtn.textContent = atLimit ? 'Expense limit reached (20)' : 'Add expense';
+  }
+
+  function renderSplitOptions() {
+    splitOptions.innerHTML = state.participants.map(p => `
+      <label class="split-pill ${selectedSplitIds.has(p.id) ? 'active' : ''}">
+        <input type="checkbox" value="${p.id}" ${selectedSplitIds.has(p.id) ? 'checked' : ''} />
+        ${escapeHtml(p.name)}
+      </label>
+    `).join('');
+    splitOptions.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = Number(cb.value);
+        if (cb.checked) selectedSplitIds.add(id); else selectedSplitIds.delete(id);
+        renderSplitOptions();
+      });
+    });
+  }
+
+  itemForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (state.items.length >= MAX_ITEMS) return;
+    if (state.participants.length < 2) return;
+
+    const desc = itemDesc.value.trim() || 'Untitled expense';
+    const amountNum = parseFloat(itemAmount.value);
+    const payerId = Number(itemPayer.value);
+    const participantIds = [...selectedSplitIds];
+
+    if (!amountNum || amountNum <= 0) {
+      itemAmount.focus();
+      return;
+    }
+    if (!payerId) return;
+    if (participantIds.length === 0) return;
+
+    state.items.push({
+      id: nextItemId++,
+      description: desc,
+      amountMills: Math.round(amountNum * 1000),
+      payerId,
+      participantIds
+    });
+
+    itemDesc.value = '';
+    itemAmount.value = '';
+    saveState();
+    renderAll();
+    itemDesc.focus();
+  });
+
+  function removeItem(id) {
+    state.items = state.items.filter(it => it.id !== id);
+    saveState();
+    renderAll();
+  }
+
+  // ---------- Items list ----------
+  const itemsCard = document.getElementById('itemsCard');
+  const itemsList = document.getElementById('itemsList');
+  const itemsListCount = document.getElementById('itemsListCount');
+
+  function nameOf(id) {
+    const p = state.participants.find(p => p.id === id);
+    return p ? p.name : '(removed)';
+  }
+
+  function renderItemsList() {
+    itemsCard.style.display = state.items.length > 0 ? 'block' : 'none';
+    itemsListCount.textContent = state.items.length;
+
+    itemsList.innerHTML = state.items.map(it => {
+      const payerName = nameOf(it.payerId);
+      const splitNames = it.participantIds.map(nameOf).join(', ');
+      return `
+        <div class="item-row">
+          <div class="item-main">
+            <div class="item-desc">${escapeHtml(it.description)}</div>
+            <div class="item-meta">Paid by <b>${escapeHtml(payerName)}</b> · split among ${escapeHtml(splitNames)}</div>
+          </div>
+          <div class="item-amount">${formatMoney(it.amountMills)}</div>
+          <button type="button" class="link" data-remove-item="${it.id}">Remove</button>
+        </div>
+      `;
+    }).join('');
+
+    itemsList.querySelectorAll('[data-remove-item]').forEach(btn => {
+      btn.addEventListener('click', () => removeItem(Number(btn.dataset.removeItem)));
+    });
+  }
+
+  // ---------- Balances & settle-up ----------
+  const summaryCard = document.getElementById('summaryCard');
+  const balanceList = document.getElementById('balanceList');
+  const settleArea = document.getElementById('settleArea');
+
+  function computeBalances() {
+    // mills (thousandths of a dollar); positive = is owed money, negative = owes money
+    const balances = {};
+    state.participants.forEach(p => { balances[p.id] = 0; });
+
+    state.items.forEach(it => {
+      if (!(it.payerId in balances)) return;
+      balances[it.payerId] += it.amountMills;
+
+      const n = it.participantIds.length;
+      if (n === 0) return;
+      const share = Math.floor(it.amountMills / n);
+      const remainder = it.amountMills - share * n;
+      // distribute remainder mills one-by-one, deterministic order
+      it.participantIds.forEach((pid, idx) => {
+        if (!(pid in balances)) return;
+        let owed = share + (idx < remainder ? 1 : 0);
+        balances[pid] -= owed;
+      });
+    });
+
+    return balances;
+  }
+
+  function simplifyDebts(balances) {
+    // operates on unrounded mills so the payment plan matches the true balances;
+    // amounts are rounded to cents only when displayed.
+    const creditors = [];
+    const debtors = [];
+    Object.entries(balances).forEach(([id, mills]) => {
+      if (mills > 0) creditors.push({ id: Number(id), amt: mills });
+      else if (mills < 0) debtors.push({ id: Number(id), amt: -mills });
+    });
+    creditors.sort((a, b) => b.amt - a.amt);
+    debtors.sort((a, b) => b.amt - a.amt);
+
+    const transactions = [];
+    let ci = 0, di = 0;
+    while (ci < creditors.length && di < debtors.length) {
+      const c = creditors[ci];
+      const d = debtors[di];
+      const amt = Math.min(c.amt, d.amt);
+      if (amt > 0) {
+        transactions.push({ fromId: d.id, toId: c.id, mills: amt });
+      }
+      c.amt -= amt;
+      d.amt -= amt;
+      if (c.amt === 0) ci++;
+      if (d.amt === 0) di++;
+    }
+    return transactions;
+  }
+
+  function renderSummary() {
+    const hasItems = state.items.length > 0 && state.participants.length >= 2;
+    summaryCard.style.display = hasItems ? 'block' : 'none';
+    if (!hasItems) return;
+
+    const balances = computeBalances();
+
+    balanceList.innerHTML = state.participants.map(p => {
+      const mills = balances[p.id] || 0;
+      const cls = mills > 0 ? 'positive' : mills < 0 ? 'negative' : 'zero';
+      const label = mills > 0 ? `is owed ${formatMoney(mills)}` : mills < 0 ? `owes ${formatMoney(-mills)}` : 'is settled up';
+      return `
+        <div class="balance-row">
+          <span class="name">${escapeHtml(p.name)}</span>
+          <span class="amt ${cls}">${label}</span>
+        </div>
+      `;
+    }).join('');
+
+    const transactions = simplifyDebts(balances);
+    if (transactions.length === 0) {
+      settleArea.innerHTML = `<div class="all-settled">Everyone is settled up. Nothing to pay.</div>`;
+    } else {
+      settleArea.innerHTML = `
+        <div class="settle-list">
+          ${transactions.map(t => `
+            <div class="settle-row">
+              <b>${escapeHtml(nameOf(t.fromId))}</b>
+              <span class="arrow">&#8594; pays &#8594;</span>
+              <b>${escapeHtml(nameOf(t.toId))}</b>
+              <span class="settle-amt">${formatMoney(t.mills)}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="transactions-note">${transactions.length} payment${transactions.length === 1 ? '' : 's'} total — minimized so no one has to make more transfers than necessary.</div>
+      `;
+    }
+  }
+
+  function renderAll() {
+    renderParticipants();
+    renderItemFormControls();
+    renderItemsList();
+    renderSummary();
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
