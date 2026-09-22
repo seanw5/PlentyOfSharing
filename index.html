@@ -58,11 +58,51 @@
   }
   .card h2 .count { color: var(--text); font-weight: 600; text-transform: none; letter-spacing: 0; }
 
+  .error-banner {
+    background: var(--red-dim);
+    color: var(--red);
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .error-banner button {
+    background: none; border: none; color: var(--red); font-size: 18px; cursor: pointer; line-height: 1; padding: 0 2px;
+  }
+
+  /* Landing / join / name entry */
+  form.stacked { display: flex; gap: 8px; }
+  form.stacked input { flex: 1; }
+  .hint-text { color: var(--dim); font-size: 13px; margin-top: 10px; line-height: 1.5; }
+  .back-link {
+    background: none; border: none; color: var(--dim); font-size: 13px; font-weight: 600;
+    cursor: pointer; padding: 12px 0 0; font-family: inherit;
+  }
+  .back-link:hover { color: var(--text); }
+
+  /* Trip bar */
+  .trip-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .trip-name { font-size: 20px; font-weight: 800; letter-spacing: -0.2px; }
+  .trip-code { font-size: 12.5px; color: var(--dim); }
+  .trip-bar-actions { display: flex; align-items: center; gap: 10px; }
+  .you-label { font-size: 13px; color: var(--dim); }
+  .you-label b { color: var(--accent); }
+
   /* Participants */
   #participantForm { display: flex; gap: 8px; margin-bottom: 14px; }
-  #participantForm input {
-    flex: 1;
-  }
+  #participantForm input { flex: 1; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
     display: inline-flex;
@@ -75,10 +115,11 @@
     font-size: 14px;
     font-weight: 600;
   }
+  .chip.is-me { background: var(--accent); color: #fff; }
   .chip button {
     background: none;
     border: none;
-    color: var(--accent);
+    color: inherit;
     cursor: pointer;
     font-size: 15px;
     line-height: 1;
@@ -86,7 +127,7 @@
     opacity: 0.6;
     border-radius: 50%;
   }
-  .chip button:hover { opacity: 1; background: rgba(79,109,245,0.15); }
+  .chip button:hover { opacity: 1; background: rgba(0,0,0,0.12); }
   .empty-hint { color: var(--dim); font-size: 14px; padding: 6px 0; }
 
   /* Item form */
@@ -113,6 +154,7 @@
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim);
   }
+  input:disabled, select:disabled { opacity: 0.6; }
   .row2 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
 
   .split-options { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -160,6 +202,8 @@
     cursor: pointer;
     font-family: inherit;
   }
+  button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+  button.secondary.danger:hover { border-color: var(--red); color: var(--red); }
   button.link {
     background: none;
     border: none;
@@ -237,99 +281,120 @@
     <p>Split group costs fairly. Settle up with the fewest payments possible.</p>
   </header>
 
-  <div class="card">
-    <h2>Participants <span class="count" id="participantCount">0</span></h2>
-    <form id="participantForm">
-      <input type="text" id="participantInput" placeholder="Add a person's name…" maxlength="30" />
-      <button type="submit" class="primary">Add</button>
-    </form>
-    <div class="chips" id="participantChips"></div>
-    <div class="empty-hint" id="participantEmptyHint">Add at least 2 people to start splitting costs.</div>
+  <div class="error-banner" id="errorBanner" style="display:none;">
+    <span id="errorText"></span>
+    <button type="button" id="errorDismiss" aria-label="Dismiss">&times;</button>
   </div>
 
-  <div class="card">
-    <h2>Add an expense <span class="count" id="itemCount">0 / 20</span></h2>
-    <form id="itemForm">
-      <div class="row2">
-        <div class="field">
-          <label for="itemDesc">What was it?</label>
-          <input type="text" id="itemDesc" placeholder="e.g. Dinner at Marea" maxlength="60" />
+  <div id="landingView">
+    <div class="card">
+      <h2>Start a new trip</h2>
+      <form class="stacked" id="createTripForm">
+        <input type="text" id="createTripName" placeholder="e.g. Cancun 2026" maxlength="80" />
+        <button type="submit" class="primary">Create trip</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Join an existing trip</h2>
+      <form class="stacked" id="joinTripForm">
+        <input type="text" id="joinTripCode" placeholder="Trip code" inputmode="numeric" />
+        <button type="submit" class="primary">Join trip</button>
+      </form>
+      <div class="hint-text">Ask whoever created the trip for its code, or use the invite link they shared with you.</div>
+    </div>
+  </div>
+
+  <div id="nameEntryView" style="display:none;">
+    <div class="card">
+      <h2 id="nameEntryTripName"></h2>
+      <form class="stacked" id="nameEntryForm">
+        <input type="text" id="nameEntryInput" placeholder="Your name" maxlength="40" autocomplete="off" />
+        <button type="submit" class="primary">Continue</button>
+      </form>
+      <button type="button" class="back-link" id="nameEntryBackBtn">&larr; Back</button>
+    </div>
+  </div>
+
+  <div id="appView" style="display:none;">
+    <div class="trip-bar">
+      <div>
+        <div class="trip-name" id="tripNameLabel"></div>
+        <div class="trip-code" id="tripCodeLabel"></div>
+      </div>
+      <div class="trip-bar-actions">
+        <span class="you-label">You're <b id="youLabel"></b></span>
+        <button type="button" class="secondary" id="copyLinkBtn">Copy invite link</button>
+        <button type="button" class="secondary danger" id="leaveTripBtn">Leave trip</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Participants <span class="count" id="participantCount">0</span></h2>
+      <form id="participantForm">
+        <input type="text" id="participantInput" placeholder="Add someone without a device…" maxlength="40" />
+        <button type="submit" class="primary">Add</button>
+      </form>
+      <div class="chips" id="participantChips"></div>
+      <div class="empty-hint" id="participantEmptyHint">Add at least 2 people to start splitting costs.</div>
+    </div>
+
+    <div class="card">
+      <h2>Add an expense <span class="count" id="itemCount">0 / 20</span></h2>
+      <form id="itemForm">
+        <div class="row2">
+          <div class="field">
+            <label for="itemDesc">What was it?</label>
+            <input type="text" id="itemDesc" placeholder="e.g. Dinner at Marea" maxlength="60" />
+          </div>
+          <div class="field">
+            <label for="itemAmount">Amount ($)</label>
+            <input type="number" id="itemAmount" placeholder="0.00" min="0" step="0.01" />
+          </div>
         </div>
         <div class="field">
-          <label for="itemAmount">Amount ($)</label>
-          <input type="number" id="itemAmount" placeholder="0.00" min="0" step="0.01" />
+          <label for="itemPayer">Who paid?</label>
+          <select id="itemPayer"></select>
         </div>
-      </div>
-      <div class="field">
-        <label for="itemPayer">Who paid?</label>
-        <select id="itemPayer"></select>
-      </div>
-      <div class="field">
-        <label>Split among</label>
-        <div class="split-row">
-          <button type="button" class="secondary" id="selectAllBtn">Select all</button>
-          <button type="button" class="secondary" id="selectNoneBtn">Clear</button>
+        <div class="field">
+          <label>Split among</label>
+          <div class="split-row">
+            <button type="button" class="secondary" id="selectAllBtn">Select all</button>
+            <button type="button" class="secondary" id="selectNoneBtn">Clear</button>
+          </div>
+          <div class="split-options" id="splitOptions"></div>
         </div>
-        <div class="split-options" id="splitOptions"></div>
-      </div>
-      <button type="submit" class="primary" id="addItemBtn">Add expense</button>
-    </form>
-  </div>
+        <button type="submit" class="primary" id="addItemBtn">Add expense</button>
+      </form>
+    </div>
 
-  <div class="card" id="itemsCard" style="display:none;">
-    <h2>Expenses <span class="count" id="itemsListCount">0</span></h2>
-    <div id="itemsList"></div>
-  </div>
+    <div class="card" id="itemsCard" style="display:none;">
+      <h2>Expenses <span class="count" id="itemsListCount">0</span></h2>
+      <div id="itemsList"></div>
+    </div>
 
-  <div class="card" id="summaryCard" style="display:none;">
-    <h2>Balances</h2>
-    <div class="balance-list" id="balanceList"></div>
+    <div class="card" id="summaryCard" style="display:none;">
+      <h2>Balances</h2>
+      <div class="balance-list" id="balanceList"></div>
 
-    <h2 style="margin-top:20px;">Settle up</h2>
-    <div id="settleArea"></div>
+      <h2 style="margin-top:20px;">Settle up</h2>
+      <div id="settleArea"></div>
+    </div>
   </div>
 </div>
 
 <script>
 (function () {
-  const STORAGE_KEY = 'plentyOfSharing_state_v1';
+  const SESSION_KEY = 'plentyOfSharing_session_v2';
   const MAX_ITEMS = 20;
+  const POLL_MS = 4000;
 
-  let state = loadState() || { participants: [], items: [] };
-  let nextParticipantId = computeNextId(state.participants);
-  let nextItemId = computeNextId(state.items);
+  let tripId = null;
+  let pendingTripId = null; // trip id being joined, before name is entered
+  let me = { id: null, name: null };
+  let tripData = { event: null, participants: [], items: [] };
   let selectedSplitIds = new Set();
-
-  function computeNextId(list) {
-    return list.reduce((max, x) => Math.max(max, x.id), 0) + 1;
-  }
-
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || !Array.isArray(parsed.participants) || !Array.isArray(parsed.items)) return null;
-      // migrate older saves that stored whole-cent amounts
-      parsed.items.forEach(it => {
-        if (it.amountMills === undefined && it.amountCents !== undefined) {
-          it.amountMills = it.amountCents * 10;
-          delete it.amountCents;
-        }
-      });
-      return parsed;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-      // storage unavailable (private browsing, sandboxed context, etc.) — continue without persistence
-    }
-  }
+  let lastAllParticipantIds = null; // tracks the participant-id list from the last render, to detect an unmodified "everyone" selection
+  let pollTimer = null;
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -345,52 +410,232 @@
     return sign + '$' + (abs / 100).toFixed(2);
   }
 
-  // ---------- Participants ----------
+  // ---------- session (per-device "remember me") ----------
+  function loadSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Number.isInteger(parsed.tripId) || typeof parsed.participantName !== 'string') return null;
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveSession(session) {
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+  }
+  function clearSession() {
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+  }
+
+  // ---------- error banner ----------
+  const errorBanner = document.getElementById('errorBanner');
+  const errorText = document.getElementById('errorText');
+  let errorTimer = null;
+  function showError(msg) {
+    errorText.textContent = msg;
+    errorBanner.style.display = 'flex';
+    clearTimeout(errorTimer);
+    errorTimer = setTimeout(hideError, 6000);
+  }
+  function hideError() {
+    errorBanner.style.display = 'none';
+  }
+  document.getElementById('errorDismiss').addEventListener('click', hideError);
+
+  // ---------- views ----------
+  const landingView = document.getElementById('landingView');
+  const nameEntryView = document.getElementById('nameEntryView');
+  const appView = document.getElementById('appView');
+
+  function showView(view) {
+    landingView.style.display = view === 'landing' ? 'block' : 'none';
+    nameEntryView.style.display = view === 'nameEntry' ? 'block' : 'none';
+    appView.style.display = view === 'app' ? 'block' : 'none';
+  }
+
+  // ---------- API helpers ----------
+  async function apiFetch(url, options) {
+    const res = await fetch(url, options);
+    let body = null;
+    try { body = await res.json(); } catch (e) {}
+    if (!res.ok) {
+      const message = (body && body.error) || `Request failed (${res.status})`;
+      throw new Error(message);
+    }
+    return body;
+  }
+
+  // ---------- landing ----------
+  document.getElementById('createTripForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('createTripName');
+    const name = input.value.trim();
+    if (!name) return;
+    try {
+      const trip = await apiFetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      input.value = '';
+      goToNameEntry(trip.id, trip.name);
+    } catch (err) {
+      showError(err.message);
+    }
+  });
+
+  document.getElementById('joinTripForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('joinTripCode');
+    const code = Number(input.value.trim());
+    if (!Number.isInteger(code) || code <= 0) {
+      showError('Enter a valid trip code.');
+      return;
+    }
+    try {
+      const data = await apiFetch(`/api/events/${code}`);
+      input.value = '';
+      goToNameEntry(code, data.event.name);
+    } catch (err) {
+      showError(err.message);
+    }
+  });
+
+  function goToNameEntry(id, name) {
+    pendingTripId = id;
+    document.getElementById('nameEntryTripName').textContent = `Join "${name}"`;
+    showView('nameEntry');
+    document.getElementById('nameEntryInput').focus();
+  }
+
+  document.getElementById('nameEntryBackBtn').addEventListener('click', () => {
+    pendingTripId = null;
+    showView('landing');
+  });
+
+  document.getElementById('nameEntryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('nameEntryInput');
+    const name = input.value.trim();
+    if (!name || pendingTripId === null) return;
+    await enterTrip(pendingTripId, name);
+  });
+
+  async function enterTrip(id, name) {
+    try {
+      const participant = await apiFetch(`/api/events/${id}/participants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      tripId = id;
+      me = { id: participant.id, name: participant.name };
+      saveSession({ tripId: id, participantName: participant.name });
+      showView('app');
+      await loadTripData();
+      startPolling();
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  // ---------- trip bar ----------
+  document.getElementById('leaveTripBtn').addEventListener('click', () => {
+    stopPolling();
+    clearSession();
+    tripId = null;
+    me = { id: null, name: null };
+    tripData = { event: null, participants: [], items: [] };
+    showView('landing');
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  });
+
+  document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+    const link = `${location.origin}${location.pathname}?trip=${tripId}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      showError('Invite link copied to clipboard.');
+    } catch (e) {
+      window.prompt('Copy this invite link:', link);
+    }
+  });
+
+  // ---------- polling ----------
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(() => loadTripData(true), POLL_MS);
+  }
+  function stopPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  async function loadTripData(silent) {
+    if (!tripId) return;
+    try {
+      const data = await apiFetch(`/api/events/${tripId}`);
+      tripData = data;
+      renderApp();
+    } catch (err) {
+      if (!silent) showError(err.message);
+      if (/not found/i.test(err.message)) {
+        stopPolling();
+        clearSession();
+        tripId = null;
+        showView('landing');
+      }
+    }
+  }
+
+  // ---------- participants ----------
   const participantForm = document.getElementById('participantForm');
-  const participantInput = document.getElementById('participantInput');
   const participantChips = document.getElementById('participantChips');
   const participantCount = document.getElementById('participantCount');
   const participantEmptyHint = document.getElementById('participantEmptyHint');
 
-  participantForm.addEventListener('submit', (e) => {
+  participantForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = participantInput.value.trim();
+    const input = document.getElementById('participantInput');
+    const name = input.value.trim();
     if (!name) return;
-    if (state.participants.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-      participantInput.value = '';
-      participantInput.focus();
-      return;
+    try {
+      await apiFetch(`/api/events/${tripId}/participants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      input.value = '';
+      await loadTripData();
+    } catch (err) {
+      showError(err.message);
     }
-    state.participants.push({ id: nextParticipantId++, name });
-    participantInput.value = '';
-    saveState();
-    renderAll();
-    participantInput.focus();
   });
 
-  function removeParticipant(id) {
-    state.participants = state.participants.filter(p => p.id !== id);
-    // remove from any item's payer/split, and drop items with no payer left
-    state.items = state.items
-      .map(it => ({ ...it, participantIds: it.participantIds.filter(pid => pid !== id) }))
-      .filter(it => it.payerId !== id && it.participantIds.length > 0);
-    saveState();
-    renderAll();
+  async function removeParticipant(id) {
+    try {
+      await apiFetch(`/api/participants/${id}`, { method: 'DELETE' });
+      await loadTripData();
+    } catch (err) {
+      showError(err.message);
+    }
   }
 
   function renderParticipants() {
-    participantCount.textContent = state.participants.length;
-    participantChips.innerHTML = state.participants.map(p => `
-      <span class="chip">${escapeHtml(p.name)}<button type="button" data-remove-participant="${p.id}" title="Remove">&times;</button></span>
+    const participants = tripData.participants;
+    participantCount.textContent = participants.length;
+    participantChips.innerHTML = participants.map(p => `
+      <span class="chip ${p.id === me.id ? 'is-me' : ''}">${escapeHtml(p.name)}<button type="button" data-remove-participant="${p.id}" title="Remove">&times;</button></span>
     `).join('');
-    participantEmptyHint.style.display = state.participants.length >= 2 ? 'none' : 'block';
+    participantEmptyHint.style.display = participants.length >= 2 ? 'none' : 'block';
 
     participantChips.querySelectorAll('[data-remove-participant]').forEach(btn => {
       btn.addEventListener('click', () => removeParticipant(Number(btn.dataset.removeParticipant)));
     });
   }
 
-  // ---------- Item form ----------
+  // ---------- item form ----------
   const itemForm = document.getElementById('itemForm');
   const itemDesc = document.getElementById('itemDesc');
   const itemAmount = document.getElementById('itemAmount');
@@ -402,7 +647,7 @@
   const selectNoneBtn = document.getElementById('selectNoneBtn');
 
   selectAllBtn.addEventListener('click', () => {
-    selectedSplitIds = new Set(state.participants.map(p => p.id));
+    selectedSplitIds = new Set(tripData.participants.map(p => p.id));
     renderSplitOptions();
   });
   selectNoneBtn.addEventListener('click', () => {
@@ -411,22 +656,35 @@
   });
 
   function renderItemFormControls() {
-    const atLimit = state.items.length >= MAX_ITEMS;
-    const hasEnoughPeople = state.participants.length >= 2;
+    const participants = tripData.participants;
+    const atLimit = tripData.items.length >= MAX_ITEMS;
+    const hasEnoughPeople = participants.length >= 2;
     const formDisabled = atLimit || !hasEnoughPeople;
 
-    itemCount.textContent = `${state.items.length} / ${MAX_ITEMS}`;
+    itemCount.textContent = `${tripData.items.length} / ${MAX_ITEMS}`;
 
-    itemPayer.innerHTML = state.participants.map(p =>
+    const prevPayerValue = itemPayer.value;
+    itemPayer.innerHTML = participants.map(p =>
       `<option value="${p.id}">${escapeHtml(p.name)}</option>`
     ).join('');
-
-    // keep only still-valid selections, default to all if nothing selected yet
-    const validIds = new Set(state.participants.map(p => p.id));
-    selectedSplitIds = new Set([...selectedSplitIds].filter(id => validIds.has(id)));
-    if (selectedSplitIds.size === 0 && state.participants.length > 0) {
-      selectedSplitIds = new Set(state.participants.map(p => p.id));
+    const validIds = new Set(participants.map(p => p.id));
+    if (validIds.has(Number(prevPayerValue))) {
+      itemPayer.value = prevPayerValue;
+    } else if (me.id && validIds.has(me.id)) {
+      itemPayer.value = me.id;
     }
+
+    // Keep the split selection synced to "everyone" as people join or leave, as long as the
+    // user hasn't manually customized it away from "everyone" — otherwise their customization
+    // (e.g. "everyone except Bob") is preserved even as new people join.
+    const wasSelectionAllOfLast = lastAllParticipantIds !== null &&
+      selectedSplitIds.size === lastAllParticipantIds.length &&
+      lastAllParticipantIds.every(id => selectedSplitIds.has(id));
+    selectedSplitIds = new Set([...selectedSplitIds].filter(id => validIds.has(id)));
+    if (selectedSplitIds.size === 0 || wasSelectionAllOfLast) {
+      selectedSplitIds = new Set(participants.map(p => p.id));
+    }
+    lastAllParticipantIds = participants.map(p => p.id);
 
     renderSplitOptions();
 
@@ -436,7 +694,7 @@
   }
 
   function renderSplitOptions() {
-    splitOptions.innerHTML = state.participants.map(p => `
+    splitOptions.innerHTML = tripData.participants.map(p => `
       <label class="split-pill ${selectedSplitIds.has(p.id) ? 'active' : ''}">
         <input type="checkbox" value="${p.id}" ${selectedSplitIds.has(p.id) ? 'checked' : ''} />
         ${escapeHtml(p.name)}
@@ -451,10 +709,10 @@
     });
   }
 
-  itemForm.addEventListener('submit', (e) => {
+  itemForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (state.items.length >= MAX_ITEMS) return;
-    if (state.participants.length < 2) return;
+    if (tripData.items.length >= MAX_ITEMS) return;
+    if (tripData.participants.length < 2) return;
 
     const desc = itemDesc.value.trim() || 'Untitled expense';
     const amountNum = parseFloat(itemAmount.value);
@@ -468,42 +726,51 @@
     if (!payerId) return;
     if (participantIds.length === 0) return;
 
-    state.items.push({
-      id: nextItemId++,
-      description: desc,
-      amountMills: Math.round(amountNum * 1000),
-      payerId,
-      participantIds
-    });
-
-    itemDesc.value = '';
-    itemAmount.value = '';
-    saveState();
-    renderAll();
-    itemDesc.focus();
+    try {
+      await apiFetch(`/api/events/${tripId}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: desc,
+          amountMills: Math.round(amountNum * 1000),
+          payerId,
+          participantIds
+        })
+      });
+      itemDesc.value = '';
+      itemAmount.value = '';
+      await loadTripData();
+      itemDesc.focus();
+    } catch (err) {
+      showError(err.message);
+    }
   });
 
-  function removeItem(id) {
-    state.items = state.items.filter(it => it.id !== id);
-    saveState();
-    renderAll();
+  async function removeItem(id) {
+    try {
+      await apiFetch(`/api/items/${id}`, { method: 'DELETE' });
+      await loadTripData();
+    } catch (err) {
+      showError(err.message);
+    }
   }
 
-  // ---------- Items list ----------
+  // ---------- items list ----------
   const itemsCard = document.getElementById('itemsCard');
   const itemsList = document.getElementById('itemsList');
   const itemsListCount = document.getElementById('itemsListCount');
 
   function nameOf(id) {
-    const p = state.participants.find(p => p.id === id);
+    const p = tripData.participants.find(p => p.id === id);
     return p ? p.name : '(removed)';
   }
 
   function renderItemsList() {
-    itemsCard.style.display = state.items.length > 0 ? 'block' : 'none';
-    itemsListCount.textContent = state.items.length;
+    const items = tripData.items;
+    itemsCard.style.display = items.length > 0 ? 'block' : 'none';
+    itemsListCount.textContent = items.length;
 
-    itemsList.innerHTML = state.items.map(it => {
+    itemsList.innerHTML = items.map(it => {
       const payerName = nameOf(it.payerId);
       const splitNames = it.participantIds.map(nameOf).join(', ');
       return `
@@ -523,7 +790,7 @@
     });
   }
 
-  // ---------- Balances & settle-up ----------
+  // ---------- balances & settle-up ----------
   const summaryCard = document.getElementById('summaryCard');
   const balanceList = document.getElementById('balanceList');
   const settleArea = document.getElementById('settleArea');
@@ -531,9 +798,9 @@
   function computeBalances() {
     // mills (thousandths of a dollar); positive = is owed money, negative = owes money
     const balances = {};
-    state.participants.forEach(p => { balances[p.id] = 0; });
+    tripData.participants.forEach(p => { balances[p.id] = 0; });
 
-    state.items.forEach(it => {
+    tripData.items.forEach(it => {
       if (!(it.payerId in balances)) return;
       balances[it.payerId] += it.amountMills;
 
@@ -582,13 +849,13 @@
   }
 
   function renderSummary() {
-    const hasItems = state.items.length > 0 && state.participants.length >= 2;
+    const hasItems = tripData.items.length > 0 && tripData.participants.length >= 2;
     summaryCard.style.display = hasItems ? 'block' : 'none';
     if (!hasItems) return;
 
     const balances = computeBalances();
 
-    balanceList.innerHTML = state.participants.map(p => {
+    balanceList.innerHTML = tripData.participants.map(p => {
       const mills = balances[p.id] || 0;
       const cls = mills > 0 ? 'positive' : mills < 0 ? 'negative' : 'zero';
       const label = mills > 0 ? `is owed ${formatMoney(mills)}` : mills < 0 ? `owes ${formatMoney(-mills)}` : 'is settled up';
@@ -620,14 +887,45 @@
     }
   }
 
-  function renderAll() {
+  function renderApp() {
+    document.getElementById('tripNameLabel').textContent = tripData.event.name;
+    document.getElementById('tripCodeLabel').textContent = `Trip code: ${tripData.event.id}`;
+    document.getElementById('youLabel').textContent = me.name;
     renderParticipants();
     renderItemFormControls();
     renderItemsList();
     renderSummary();
   }
 
-  renderAll();
+  // ---------- boot ----------
+  async function init() {
+    const urlParams = new URLSearchParams(location.search);
+    const urlTripId = Number(urlParams.get('trip'));
+    const hasUrlTrip = Number.isInteger(urlTripId) && urlTripId > 0;
+    const saved = loadSession();
+
+    if (hasUrlTrip && saved && saved.tripId === urlTripId) {
+      await enterTrip(urlTripId, saved.participantName);
+      return;
+    }
+    if (hasUrlTrip) {
+      try {
+        const data = await apiFetch(`/api/events/${urlTripId}`);
+        goToNameEntry(urlTripId, data.event.name);
+      } catch (err) {
+        showError(err.message);
+        showView('landing');
+      }
+      return;
+    }
+    if (saved) {
+      await enterTrip(saved.tripId, saved.participantName);
+      return;
+    }
+    showView('landing');
+  }
+
+  init();
 })();
 </script>
 </body>
